@@ -40,7 +40,7 @@ def remove(h):
     heapify(f,0)    # fixing the heap
     return s
 
-def val(s,h=1,w=True):  # returns f(x) which is path len + heuristic distance from target
+def val(s,h=2,w=False):  # returns f(x) which is path len + heuristic distance from target
     if h==1:
         if w:
             return (2*state.hdistance1(s))+state.path_len(s)

@@ -43,6 +43,10 @@ answer=search(4)
 # print(answer)
 
 """
+How does weighting affect the runtime (number of states checked) and optimality (actual cost of found solution) of the code?
+> From the very small experiment below, it appears weighting the metrics results in a faster but slightly less optimal solution.
+
+
 UNWeighted results for dist1:
 SEARCH 2
 
@@ -89,46 +93,46 @@ Average path   length: 16.54
 UNWeighted results for dist2:
 SEARCH 2
 
-Average depth: 2.57
-Average number pushed: 2.57
-Average number popped: 2.84
-Average path   length: 1.53
+Average depth: 2.62
+Average number pushed: 2.62
+Average number popped: 2.78
+Average path   length: 1.58
 
 SEARCH 3
 
-Average depth: 32.62
-Average number pushed: 32.62
-Average number popped: 19.19
-Average path   length: 6.45
+Average depth: 22.89
+Average number pushed: 22.89
+Average number popped: 13.33
+Average path   length: 5.85
 
 SEARCH 4
 
-Average depth: 18572.37
-Average number pushed: 18572.37
-Average number popped: 9131.36
-Average path   length: 16.71
+Average depth: 14226.65
+Average number pushed: 14226.65
+Average number popped: 7194.02
+Average path   length: 15.32
 ----------------------------------------
 Weighted results for dist2:
 SEARCH 2
 
-Average depth: 2.25
-Average number pushed: 2.25
-Average number popped: 2.51
-Average path   length: 1.28
+Average depth: 2.18
+Average number pushed: 2.18
+Average number popped: 2.44
+Average path   length: 1.34
 
 SEARCH 3
 
-Average depth: 26.25
-Average number pushed: 26.25
-Average number popped: 15.25
-Average path   length: 6.58
+Average depth: 26.58
+Average number pushed: 26.58
+Average number popped: 15.67
+Average path   length: 5.52
 
 SEARCH 4
 
-Average depth: 48734.73
-Average number pushed: 48734.73
-Average number popped: 23909.28
-Average path   length: 23.58
+Average depth: 3354.98
+Average number pushed: 3354.98
+Average number popped: 1699.72
+Average path   length: 17.72
 ----------------
 ----------------
 ----------------

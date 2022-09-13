@@ -5,6 +5,7 @@ The target for 8-puzzle is: (zero is the hole)
 345
 678
 '''
+from cmath import sqrt
 import random
 import math
 
@@ -68,11 +69,12 @@ def hdistance1(s): #This will be the simple heuristic of the number of bricks no
 def hdistance2(s): #This will be the Manhattan distance heuristic
     out_count=0
     lst = s[0]
+    size= math.isqrt(len(lst))
     for i in range(0,len(lst)):
         if lst[i] != i :
-            ix= i % 3
-            vx= lst[i] % 3
-            iy= i / 3
-            vy= lst[i]/3 
+            ix= i % size
+            vx= lst[i] % size
+            iy= i / size
+            vy= lst[i]/size
             out_count+= abs(ix-vx)+abs(iy-vy)
     return out_count
