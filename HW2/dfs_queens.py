@@ -279,7 +279,133 @@ def place_best(row_choice=-1,avoid=[]):
     print(columns)
     display()
 
-def solve_forward_checking():
+
+def init_spots():
+    # Spots is the array keeping track of which spots are available (0) or not (-1).
+    # Spots are marked as unavailable as pieces are placed, and anything below them or on either diagonal is marked as unavailable.
+    # NOTE: Potential alt impl- just list the available indecies. Need to check contains and then remove when placing a new piece, but checking for len>0 is easier than checking if none are available.
+    # -> Actually let's do this.
+    spots= []
+    for r in range(0,size):
+        spots.append([c for c in range(0,size)]) # We begin with all spots being available.
+    return spots
+
+def block_spots(row,col,origspots):
+    spots= [row.copy() for row in origspots]
+    for r in spots:
+        if col in r:
+            r.remove(col)
+    # check diagonal
+    for r in range(0,size):
+        for c in origspots[r]:
+            if ((c-r == col-row) or ((size - c) - r == (size - col) - row))and (c in spots[r]):
+                spots[r].remove(c)
+    return spots
+
+def redo_spots(columns):
+    spots=init_spots()
+    for row,col in enumerate(columns):
+        if col != -1:
+            spots=block_spots(row,col,spots)
+    return spots
+
+def disp_spots(spots):
+    for c in range(0,size):
+        print(c,end="  ")
+    print()
+    for r in range(0,size):
+        for c in range(0,size):
+            if c in spots[r]:
+                print("+",end="  ")
+            else:
+                print("-",end="  ")
+        print()
+
+def spots_remaining(spots,exceptrow):
+    for row,col in enumerate(columns):
+        if col==-1 and (not (row == exceptrow)) and len(spots[row])==0:
+            print("No spots for r",row)
+            return False
+    return True
+
+def most_restricted(spots):
+    remaining= [r for r in range(0,size) if columns[r]==-1]
+    min_row= 0
+    min= 7
+    for r in remaining:
+        opt= len(spots[r])
+        if opt< min:
+            min=opt
+            min_row=min
+    return min_row
+
+
+def solve_forward_checking(size):
+    empty_board()
+    number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
+    number_of_iterations = 0
+    row = 0
+    column = 0
+    col_max=0
+    # Spots is the array keeping track of which spots are available (0) or not (-1).
+    spots= init_spots()
+
+    # iterate over rows of board
+    while True:
+        # place queen in next row
+        ''''print(columns)
+        print("I have ", row, " number of queens put down")
+        display()
+        print(number_of_moves)'''
+        if spots[row]:
+            col_max=max(spots[row])
+        else:
+            col_max=-1
+        for col in spots[row]:
+            column=col
+            number_of_iterations += 1
+            new_spots= block_spots(row,col,spots)
+            spots_remain= True
+            for r,c in enumerate(columns):
+                if c==-1 and (not (r == row)) and len(new_spots[r])==0:
+                    spots_remain= False
+                    break
+            if spots_remain:    # We found a good spot for this row, continue to next row.
+                number_of_moves += 1
+                columns[row] = col
+                spots = new_spots
+                # disp_spots(spots)
+                row += 1
+                break
+            else:           # We will ruin the board with this placement.
+                column+=1 # Used as an indicator of passing the last available col
+                continue
+
+
+        if (column>col_max) or (col_max==-1) or row == size: # If we've iterated to the end of the board.
+            if (all_placed_correctly()):
+                print("I did it! Here is my solution")
+                display()
+                # print(number_of_moves)
+                return number_of_iterations, number_of_moves
+            else:             # I couldn't find a solution so I now backtrack
+                number_of_iterations += 1
+                number_of_moves      += 1
+                prev_column = columns[row-1]
+                columns[row-1]=-1
+                spots = redo_spots(columns)
+                spots[row-1]=[spot for spot in spots[row-1] if spot>prev_column]
+                if (row == 0):  # I backtracked to row 0, and failed.
+                    print("There are no solutions")
+                    # print(number_of_moves)
+                    return number_of_iterations, number_of_moves
+                # try previous row again
+                row -= 1
+                # start checking at column = (1 + value of column in previous row)
+                column = 1 + prev_column
+
+
+def old_solve_forward_checking():
     empty_board()
     number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
     number_of_iterations = 0
@@ -440,19 +566,6 @@ def solve_repair_deadend_random():
     return iterations,moves
 
 
-"""This code is nice, but it uses three functions:
-
-1. place_in_next_row
-
-2. remove_in_current_row
-
-3. next_row_is_safe
-
-That we now have to define
-
-
-"""
-
 def place_in_next_row(column):
     columns.append(column)
  
@@ -520,7 +633,7 @@ def all_placed_correctly():
 # print(solve_queen(size))
 
 # print(solve_repair_deadend_random())
-
-# print(oldDFS_solve_forward_checking())
-print(solve_queen(size))
+size=100
+print(solve_forward_checking(size))
+# print(solve_queen(size))
 print(columns)
