@@ -14,9 +14,7 @@ As we did in class, we will represent the board as a one-dimensional array where
 columns = [] #columns is the locations for each of the queens
 # columns[r] is a number c if a queen is placed at row r and column c.
 size = 4
-import random #hint -- you will need this for the following code: column=random.randrange(0,size)
-
-"""Let's setup one iteration of the British Museum algorithm-- we'll put down 4 queens randomly."""
+import random
 
 def place_n_queens(size):
     columns.clear()
@@ -26,9 +24,6 @@ def place_n_queens(size):
         columns.append(column)
         row+=1
 
-place_n_queens(size)
-
-"""Now, we can print the result with a simple loop:"""
 
 def display():
     for row in range(len(columns)):
@@ -39,12 +34,8 @@ def display():
                 print(' .', end=' ')
         print()
 
-place_n_queens(size)
-display()
-print(columns)
 
-"""This of course is not necessary legal, so we'll write a simple DFS search with backtracking:"""
-
+# Provided dfs method.
 def solve_queen(size):
     columns.clear()
     number_of_moves = 0 #where do I change this so it counts the number of Queen moves?
@@ -89,46 +80,18 @@ def solve_queen(size):
 """
     NEW CODE
 """
+# This empty board method is used in stead of columns.clear for the board used to place rows in arbitrary order.
 def empty_board():
     columns.clear()
     print(columns)
     for i in range(0,size):
         columns.append(-1)
 
-def pos_is_safe(row,col):
-    myCol=col
-    myRow=row
-    # Check column
-    for row, col in enumerate(columns):
-        if col == myCol and row != myRow and col != -1:
-            #  print("Col hit (row,col)", row, col)
-            return False
-
-    # check diagonal
-    for queen_row, queen_column in enumerate(columns):
-        if queen_row == myRow:
-            continue  # This is just me.
-        elif queen_column == -1:
-            continue
-        elif (queen_column - queen_row) == (myCol - myRow):
-            # print("Diagonal hit(row,col)", row, col)
-            # print(queen_column,queen_row,myCol,myRow)
-            # print((queen_column - queen_row), "==", (myCol-myRow))
-            return False
-
-    # check other diagonal
-    for queen_row, queen_column in enumerate(columns):
-        if queen_row == myRow:
-            continue  # This is just me.
-        elif queen_column == -1:
-            continue
-        elif ((size - queen_column) - queen_row
-              == (size - myCol) - myRow):
-            # print("Other Diagonal hit(row,col)", row, col)
-            return False
-    return True
 
 
+# returns a list of rows that conflict with this row.
+# Used as a heuristic for optimal placement in repair.
+# Same logic as that provided next_row_is_safe method.
 def get_conflicts(myRow):
    myCol= columns[myRow]
    conflicts=[]
@@ -164,6 +127,7 @@ def get_conflicts(myRow):
           conflicts.append(row)
    return conflicts
 
+# Used as a sub-routine for the whole board correctness check.
 def col_is_valid(myRow):
    myCol= columns[myRow]
    if myCol==-1:
@@ -208,6 +172,17 @@ def board_is_valid():
       return False
   return True
 
+# Checks not only for conflicts, but also that all pieces were actually placed.
+def all_placed_correctly():
+    for row in columns:
+        if columns[row]==-1:
+            return False
+    if board_is_valid():
+        return True
+    else:
+        return False
+
+# Returns list of columns for which the passed row has no conflicts.
 def potential_cols(row):
     available_cols=[]
     available=True
@@ -237,59 +212,15 @@ def potential_cols(row):
             available_cols.append(column)
     return available_cols
 
-def place_best(row_choice=-1,avoid=[]):
-    if row_choice==-1:
-        min_options=size+1
-        available= [r for r in range(0,size) if columns[r]==-1]
-        for r in available:
-            options=potential_cols(r)
-            if len(options)<min_options:
-                min_options=len(options)
-                row_choice=r
-    print("Placing row ", row_choice)
-    max_options_sum = -1
-    col_choice = -1
-    available= [r for r in range(0,size) if columns[r]==-1]
-    if row_choice in available:
-        available.remove(row_choice)
-
-    for col in potential_cols(row_choice):
-        columns[row_choice]=col
-        if not board_is_valid() or (col in avoid):
-            columns[row_choice]=-1
-            continue
-        else:
-            opt_sum=0
-            for r in available:
-                options= len(potential_cols(r))
-                if options!=0:
-                    opt_sum+= options
-                else: # If any row has no options, this is unacceptable
-                    columns[row_choice] = -1
-                    opt_sum=-1
-            if opt_sum > max_options_sum:
-                max_options_sum = opt_sum
-                col_choice = col
-            columns[row_choice]=-1
-    if col_choice==-1: # We're stuck and need to repair/backtrack.
-        placed= [r for r in range(0,size) if columns[r]!=-1]
-        for row in placed:
-            place_best(row,[columns[row]])
-    columns[row_choice]=col_choice
-    print(columns)
-    display()
-
-
+# Spots is the proxy model for forward checking.
+# Maintains a list of available spots for each row.
 def init_spots():
-    # Spots is the array keeping track of which spots are available (0) or not (-1).
-    # Spots are marked as unavailable as pieces are placed, and anything below them or on either diagonal is marked as unavailable.
-    # NOTE: Potential alt impl- just list the available indecies. Need to check contains and then remove when placing a new piece, but checking for len>0 is easier than checking if none are available.
-    # -> Actually let's do this.
     spots= []
     for r in range(0,size):
         spots.append([c for c in range(0,size)]) # We begin with all spots being available.
     return spots
 
+# When a new piece is placed we remove the conflicting spots.
 def block_spots(row,col,origspots):
     spots= [row.copy() for row in origspots]
     for r in spots:
@@ -302,6 +233,7 @@ def block_spots(row,col,origspots):
                 spots[r].remove(c)
     return spots
 
+# Used to re-create the spots array when backtracking.
 def redo_spots(columns):
     spots=init_spots()
     for row,col in enumerate(columns):
@@ -310,6 +242,7 @@ def redo_spots(columns):
             spots=block_spots(row,col,spots)
     return spots
 
+# A helper method to print the passed spots array.
 def disp_spots(spots):
     for c in range(0,size):
         print(c,end="  ")
@@ -322,6 +255,8 @@ def disp_spots(spots):
                 print("-",end="  ")
         print()
 
+# Does all unplaced rows (except the exceptrow) have a place to go
+# Could be improved by placing pieces with only one potential spot.
 def spots_remaining(spots,exceptrow):
     for row,col in enumerate(columns):
         if col==-1 and (not (row == exceptrow)) and len(spots[row])==0:
@@ -329,6 +264,7 @@ def spots_remaining(spots,exceptrow):
             return False
     return True
 
+# Returns the row with the fewest potential spots.
 def most_restricted(spots):
     remaining= [r for r in range(0,size) if columns[r]==-1]
     min_row= 0
@@ -341,6 +277,72 @@ def most_restricted(spots):
             min_row=r
     # print("Most restricted ",min_row,'\t',min)
     return min_row
+
+
+def solve_forward_checking(size):
+    empty_board()
+    number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
+    number_of_iterations = 0
+    row = 0
+    column = 0
+    col_max=0
+    # Spots is the array keeping track of which spots are available (0) or not (-1).
+    spots= init_spots()
+
+    # iterate over rows of board
+    while True:
+        # place queen in next row
+        ''''print(columns)
+        print("I have ", row, " number of queens put down")
+        display()
+        print(number_of_moves)'''
+        if spots[row]:
+            col_max=max(spots[row])
+        else:
+            col_max=-1
+        for col in spots[row]:
+            column=col
+            number_of_iterations += 1
+            new_spots= block_spots(row,col,spots)
+            spots_remain= True
+            for r,c in enumerate(columns):
+                if c==-1 and (not (r == row)) and len(new_spots[r])==0:
+                    spots_remain= False
+                    break
+            if spots_remain:    # We found a good spot for this row, continue to next row.
+                number_of_moves += 1
+                columns[row] = col
+                spots = new_spots
+                spots[row].clear()
+                # disp_spots(spots)
+                row +=1
+                break
+            else:           # We will ruin the board with this placement.
+                column+=1 # Used as an indicator of passing the last available col
+                continue
+
+
+        if (column>col_max or row == size): # If we've iterated to the end of the board.
+            if (all_placed_correctly()):
+                print("I did it! Here is my solution")
+                display()
+                # print(number_of_moves)
+                return number_of_iterations, number_of_moves
+            else:             # I couldn't find a solution so I now backtrack
+                number_of_moves      += 1
+                if (row==0):  # I backtracked past 1st row.
+                    print("There are no solutions")
+                    # print(number_of_moves)
+                    return number_of_iterations, number_of_moves
+                prev_row= row-1
+                prev_column = columns[prev_row]
+                columns[prev_row]=-1
+                spots = redo_spots(columns)
+                # Since I am using the for col in spots we preemptively remove the previously tried columns
+                # This is equivalent to colum+=1 in the DFS code.
+                spots[prev_row]=[spot for spot in spots[prev_column] if spot>prev_column]
+                # try previous row again
+                row = prev_row
 
 
 def solve_forward_checking_most_constricted(size,start_row=2):
@@ -412,95 +414,6 @@ def solve_forward_checking_most_constricted(size,start_row=2):
                 row = prev_row
 
 
-
-# def old_solve_forward_checking():
-#     empty_board()
-#     number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
-#     number_of_iterations = 0
-#     row = 0
-#     column = 0
-#     # iterate over rows of board
-#     while True:
-#         # place queen in next row
-#         ''''print(columns)
-#         print("I have ", row, " number of queens put down")
-#         display()
-#         print(number_of_moves)'''
-#         while column < size:
-#             number_of_iterations += 1
-#             if pos_is_safe(row,column):
-#                 columns[row] = column
-#                 if not remaining_rows_possible():
-#                     columns[row]=-1
-#                     column+=1
-#                 else:  # We found a good spot for this row, continue to next row.
-#                     row += 1
-#                     column = 0
-#                     break
-#             else:
-#                 column += 1
-#
-#         if (column == size or row == size): # If we've iterated to the end of the board.
-#             if (all_placed_correctly()):
-#                 print("I did it! Here is my solution")
-#                 display()
-#                 # print(number_of_moves)
-#                 return number_of_iterations, number_of_moves
-#             else:             # I couldn't find a solution so I now backtrack
-#                 number_of_iterations += 1
-#                 prev_column = columns[row-1]
-#                 columns[row-1]=-1
-#                 if (row == 0):  # I backtracked to row 0, and failed.
-#                     print("There are no solutions")
-#                     # print(number_of_moves)
-#                     return number_of_iterations, number_of_moves
-#                 # try previous row again
-#                 row -= 1
-#                 # start checking at column = (1 + value of column in previous row)
-#                 column = 1 + prev_column
-
-
-# def OLD_solve_forward_checking():
-#     empty_board()
-#     first_row= random.randrange(0,size)
-#     for col in range(0,size):
-#         columns[first_row]=col
-#         for i in range(1,size):
-#             row_choice = -1
-#             min_options = size+1  #Equivalent to max_int here
-#             available= [r for r in range(0,size) if columns[r]==-1]
-#             for r in available:
-#                 options=potential_cols(r)
-#                 if len(options)<min_options:
-#                     min_options=len(options)
-#                     row_choice=r
-#             max_options_sum = -1
-#             col_choice = -1
-#             available = [r for r in range(0, size) if columns[r] == -1]
-#             if row_choice in available:
-#                 available.remove(row_choice)
-#
-#             for c in potential_cols(row_choice):
-#                 columns[row_choice] = c
-#                 opt_sum = 0
-#                 for r in available:
-#                     options = len(potential_cols(r))
-#                     if options != 0:
-#                         opt_sum += options
-#                     else:  # If any row has no options, this is unacceptable
-#                         columns[row_choice] = -1
-#                         opt_sum = -1
-#                 if opt_sum > max_options_sum:
-#                     max_options_sum = opt_sum
-#                     col_choice = c
-#                 columns[row_choice] = -1
-#             if col_choice == -1:  # We're stuck and need to repair/backtrack.
-#                 placed = [r for r in range(0, size) if columns[r] != -1]
-#                 for row in placed:
-#                     place_best(row, [columns[row]])
-#             columns[row_choice] = col_choice
-
-
 def solve_repair_very_random():
     empty_board()
     place_n_queens(size)
@@ -510,12 +423,6 @@ def solve_repair_very_random():
     while not board_is_valid():
         iterations+=1
         row= random.randrange(0,size)
-        # max_conflicts= len(get_conflicts(row))
-        # for r in range(0,size):
-        #     conflicts =len(get_conflicts(r))
-        #     if conflicts>max_conflicts:
-        #         row=r
-        #         max_conflicts=conflicts
         orig_col= columns[row]
         best_col= orig_col
         min_conflicts=len(get_conflicts(row))
@@ -602,14 +509,6 @@ def next_row_is_safe(column):
     return True
 
 
-
-def remaining_rows_possible():
-    remaining= [r for r in range(0,size) if columns[r]==-1]
-    for r in remaining:
-        if len(potential_cols(r))==0:
-            return False
-    return True
-
 # #size = int(input('Enter n: '))
 # num_iterations=0
 # number_moves = 0
@@ -622,14 +521,6 @@ size=8
 empty_board()
 display()
 
-def all_placed_correctly():
-    for row in columns:
-        if columns[row]==-1:
-            return False
-    if board_is_valid():
-        return True
-    else:
-        return False
 
 # count=0
 # while not all_placed_correctly():
@@ -641,16 +532,30 @@ def all_placed_correctly():
 # print(solve_queen(size))
 
 # print(solve_repair_deadend_random())
-size=20
-iter=[]
+# size=20
+# iter=[]
+# moves=[]
+# for i in range(0,size):
+#    itt,mov= solve_forward_checking_most_constricted(size,i)
+#    iter.append(itt)
+#    moves.append(mov)
+# print(min(iter),"\t",iter.index(min(iter)))
+# print(min(moves),"\t",moves.index(min(moves)))
+# print("hi")
+# # print(solve_forward_checking_most_constricted(size))
+# # print(solve_queen(size))
+# print(columns)
+size=8
+print(solve_forward_checking(size))
+
+
+# Forward Checking statistics
+iterations=[]
 moves=[]
-for i in range(0,size):
-   itt,mov= solve_forward_checking_most_constricted(size,i)
-   iter.append(itt)
-   moves.append(mov)
-print(min(iter),"\t",iter.index(min(iter)))
-print(min(moves),"\t",moves.index(min(moves)))
-print("hi")
-# print(solve_forward_checking_most_constricted(size))
-# print(solve_queen(size))
-print(columns)
+for i in range(0,100):
+    i,m=solve_repair_very_random()
+    iterations.append(i)
+    moves.append(m)
+print("min\tmax\tavg")
+print(min(iterations),'\t',max(iterations),'\t',(sum(iterations)/len(iterations)),"\tIterations")
+print(min(moves),'\t',max(moves),'\t',(sum(moves)/len(moves)),"\tMoves")

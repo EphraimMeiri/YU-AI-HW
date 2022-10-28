@@ -1,0 +1,52 @@
+n-Queens writeup
+
+Results
+
+Vanilla DFS
+(I modified where iterations and moves are counted, as made sense to me. See comments in code)
+min  	max 	avg
+982  	982  	982.0 	Iterations
+218  	218  	 218.0 	Moves
+
+British Museum
+Simply re-shuffles the board and checks if it’s a solution.
+min		max			avg
+1375 	 1033468 	 203662.43 	Iterations
+5500 	 4133872 	 814649.72 	Moves
+
+Heuristic Repair
+Begins with a random board, and then finds the row that has the most conflicts, and places it in a the position that minimizes conflicts. If we are stuck— no such column exists that can improve this worst row, I just reshuffle the board. This quick to quick method seems to have worked better than the
+
+quick to quit:
+min	 max		avg
+3 	 305 	 55.63 	Iterations
+7 	 230 	 46.24 	Moves
+
+standard:
+min	max	avg
+9 	 4041 	 933.58 	Iterations
+10 	 2219 	 515.7 	Moves
+
+Forward Checking
+min	max	avg
+238 	 238 	 238.0 	Iterations
+184 	 184 	 184.0 	Moves
+
+
+Forward Checking + Most constrained
+(The more robust algorithm that allows for any order of rows also makes it easy to change the 1st row placed. As documented below this significantly impacts performance, but the metric for best starting place is not obvious to me. For example here it appears that size/2 is a good metric, but for n=20 I found 13 ti be the best starting position.)
+
+Starting from 0,0:
+min	max	avg
+163 	 163 	 163.0 	Iterations
+134 	 134 	 134.0 	Moves
+
+Starting from 2:
+min	max	avg
+13 	 13 	 13.0 	Iterations
+12 	 12 	 12.0 	Moves
+
+Starting from 4:
+min	max	avg
+8 	 8 	 8.0 	Iterations
+8 	 8 	 8.0 	Moves
