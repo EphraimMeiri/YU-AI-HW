@@ -306,6 +306,7 @@ def redo_spots(columns):
     spots=init_spots()
     for row,col in enumerate(columns):
         if col != -1:
+            spots[row].clear()
             spots=block_spots(row,col,spots)
     return spots
 
@@ -331,20 +332,24 @@ def spots_remaining(spots,exceptrow):
 def most_restricted(spots):
     remaining= [r for r in range(0,size) if columns[r]==-1]
     min_row= 0
-    min= 7
+    min= size+1
+    # print("-")
     for r in remaining:
         opt= len(spots[r])
         if opt< min:
             min=opt
-            min_row=min
+            min_row=r
+    # print("Most restricted ",min_row,'\t',min)
     return min_row
 
 
-def solve_forward_checking(size):
+def solve_forward_checking_most_constricted(size,start_row=2):
     empty_board()
     number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
     number_of_iterations = 0
-    row = 0
+    # row = int(size/2)
+    row = start_row
+    row_stack=[]
     column = 0
     col_max=0
     # Spots is the array keeping track of which spots are available (0) or not (-1).
@@ -374,15 +379,17 @@ def solve_forward_checking(size):
                 number_of_moves += 1
                 columns[row] = col
                 spots = new_spots
+                spots[row].clear()
                 # disp_spots(spots)
-                row += 1
+                row_stack.append(row)
+                row = most_restricted(spots)
                 break
             else:           # We will ruin the board with this placement.
                 column+=1 # Used as an indicator of passing the last available col
                 continue
 
 
-        if (column>col_max) or (col_max==-1) or row == size: # If we've iterated to the end of the board.
+        if (column>col_max): # If we've iterated to the end of the board.
             if (all_placed_correctly()):
                 print("I did it! Here is my solution")
                 display()
@@ -391,65 +398,66 @@ def solve_forward_checking(size):
             else:             # I couldn't find a solution so I now backtrack
                 number_of_iterations += 1
                 number_of_moves      += 1
-                prev_column = columns[row-1]
-                columns[row-1]=-1
+
+                if (not row_stack):  # I backtracked past 1st row.
+                    print("There are no solutions")
+                    # print(number_of_moves)
+                    return number_of_iterations, number_of_moves
+                prev_row= row_stack.pop()
+                prev_column = columns[prev_row]
+                columns[prev_row]=-1
                 spots = redo_spots(columns)
-                spots[row-1]=[spot for spot in spots[row-1] if spot>prev_column]
-                if (row == 0):  # I backtracked to row 0, and failed.
-                    print("There are no solutions")
-                    # print(number_of_moves)
-                    return number_of_iterations, number_of_moves
+                spots[prev_row]=[spot for spot in spots[prev_column] if spot>prev_column]
                 # try previous row again
-                row -= 1
-                # start checking at column = (1 + value of column in previous row)
-                column = 1 + prev_column
+                row = prev_row
 
 
-def old_solve_forward_checking():
-    empty_board()
-    number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
-    number_of_iterations = 0
-    row = 0
-    column = 0
-    # iterate over rows of board
-    while True:
-        # place queen in next row
-        ''''print(columns)
-        print("I have ", row, " number of queens put down")
-        display()
-        print(number_of_moves)'''
-        while column < size:
-            number_of_iterations += 1
-            if pos_is_safe(row,column):
-                columns[row] = column
-                if not remaining_rows_possible():
-                    columns[row]=-1
-                    column+=1
-                else:  # We found a good spot for this row, continue to next row.
-                    row += 1
-                    column = 0
-                    break
-            else:
-                column += 1
 
-        if (column == size or row == size): # If we've iterated to the end of the board.
-            if (all_placed_correctly()):
-                print("I did it! Here is my solution")
-                display()
-                # print(number_of_moves)
-                return number_of_iterations, number_of_moves
-            else:             # I couldn't find a solution so I now backtrack
-                number_of_iterations += 1
-                prev_column = columns[row-1]
-                columns[row-1]=-1
-                if (row == 0):  # I backtracked to row 0, and failed.
-                    print("There are no solutions")
-                    # print(number_of_moves)
-                    return number_of_iterations, number_of_moves
-                # try previous row again
-                row -= 1
-                # start checking at column = (1 + value of column in previous row)
-                column = 1 + prev_column
+# def old_solve_forward_checking():
+#     empty_board()
+#     number_of_moves = 0  # where do I change this so it counts the number of Queen moves?
+#     number_of_iterations = 0
+#     row = 0
+#     column = 0
+#     # iterate over rows of board
+#     while True:
+#         # place queen in next row
+#         ''''print(columns)
+#         print("I have ", row, " number of queens put down")
+#         display()
+#         print(number_of_moves)'''
+#         while column < size:
+#             number_of_iterations += 1
+#             if pos_is_safe(row,column):
+#                 columns[row] = column
+#                 if not remaining_rows_possible():
+#                     columns[row]=-1
+#                     column+=1
+#                 else:  # We found a good spot for this row, continue to next row.
+#                     row += 1
+#                     column = 0
+#                     break
+#             else:
+#                 column += 1
+#
+#         if (column == size or row == size): # If we've iterated to the end of the board.
+#             if (all_placed_correctly()):
+#                 print("I did it! Here is my solution")
+#                 display()
+#                 # print(number_of_moves)
+#                 return number_of_iterations, number_of_moves
+#             else:             # I couldn't find a solution so I now backtrack
+#                 number_of_iterations += 1
+#                 prev_column = columns[row-1]
+#                 columns[row-1]=-1
+#                 if (row == 0):  # I backtracked to row 0, and failed.
+#                     print("There are no solutions")
+#                     # print(number_of_moves)
+#                     return number_of_iterations, number_of_moves
+#                 # try previous row again
+#                 row -= 1
+#                 # start checking at column = (1 + value of column in previous row)
+#                 column = 1 + prev_column
 
 
 # def OLD_solve_forward_checking():
@@ -633,7 +641,16 @@ def all_placed_correctly():
 # print(solve_queen(size))
 
 # print(solve_repair_deadend_random())
-size=100
-print(solve_forward_checking(size))
+size=20
+iter=[]
+moves=[]
+for i in range(0,size):
+   itt,mov= solve_forward_checking_most_constricted(size,i)
+   iter.append(itt)
+   moves.append(mov)
+print(min(iter),"\t",iter.index(min(iter)))
+print(min(moves),"\t",moves.index(min(moves)))
+print("hi")
+# print(solve_forward_checking_most_constricted(size))
 # print(solve_queen(size))
 print(columns)
