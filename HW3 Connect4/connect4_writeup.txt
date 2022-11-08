@@ -1,0 +1,14 @@
+My code consists of several agents which play the provided connect4 implementation.
+The provided agents are as follows:
+    MoveRandom- This was already provided. The agent chooses a valid spot fully randomly
+    muskenu-- Semi-random. The agent checks for any immediate wins or losses and avoids them.
+    eval-- uses the eval function to execute 1 level of forward checking.
+    minimax_agent-- uses minimax to choose a spot.
+    ab_agent-- usues alpha-beta pruning to choose a spot.
+    hakham-- Shortcuts calling ab_agent in case of immediate win/loss or a potential double trap.
+    (The above ordering should roughly follow the 'difficulty' of each agent.)
+
+Minimax and ab_agent use a helper function eval which returs a huristic score for the given board.
+    It works by
+    giving strong weight to a win,loss or double trap
+    and otherwise sums all the values of all series of 4 in the board (In all directions.)
