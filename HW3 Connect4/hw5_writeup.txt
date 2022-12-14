@@ -1,0 +1,17 @@
+My Monte-carlo code builds off my connect4 code from hw3.
+It re-uses the game implementation, as well as the helper methods to check for the end of a game.
+(The Majority of the code is for a MCST implementation that I did not end up implementing successfully, as I got stuck on a bug.
+Due to that portion of the assignment being nixed, it was no longer worth the time to fix it for my own interest, due to the impending final-מגן.)
+
+MCagent- The general idea is that it searches with a depth of 1, which move will result with the most wins,
+    assuming the game proceedes entirely randomly from that move onwards.
+    
+More specifically, the agent will play n games for each of COLUMN_COUNT columns,
+    We will keep a win tally, counting how many of n games were won when each column was chosen.
+    for each column C, we will play n games in the following manner:
+        the first move of the simulated game will be to place a piece in column C 
+        We then alternate placing peices of each color randomly.
+        After each move we check for game-over. 
+        In the event that a move has ended the game, if we won, add 1 to the win tally for column C
+    At the completion of all the games, we choose the column that has the highest win tally.
+
